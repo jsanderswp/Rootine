@@ -20,30 +20,6 @@ class DataController {
     
     var currentTask: Task<Void, Never>?
     
-    func processInput(_ input: String) {
-        Task {
-            guard let text = text else { return }
-            let result = await geminiService.parseActivities(text)
-            
-            guard !Task.isCancelled else { return }
-
-            switch result {
-            case .success(let activities):
-                let activityEnergies = energyService.calculateEnergy(from: activities)
-                let activityImpacts = await energyService.calculateImpact(from: activityEnergies)
-                
-                guard !Task.isCancelled else { return }
-                self.activityImpacts = activityImpacts
-                
-                let prices = await costService.fetchHourlyPrices()
-
-            case .failure(let error):
-                print("Gemini error:", error)
-                self.activityImpacts = nil
-            }
-        }
-    }
-    
     func scheduleActivities(
         impacts: [ActivityImpact],
         prices: [HourlyPrice],
@@ -52,23 +28,32 @@ class DataController {
         
         var scheduled: [ScheduledActivity] = []
         let calendar = Calendar.current
+        var occupiedHours: Set<Int> = []
         
         for impact in impacts {
             let activity = impact.activity
             
             var bestScore = Double.infinity
             var bestStartHour = 0
+            var bestSlots: [Int] = []
+            
+            let durationHours = Int(ceil(activity.duration ?? 1))
             
             for startIndex in 0..<prices.count {
                 
-                let durationHours = Int(ceil(activity.duration ?? 1))
+                let requiredSlots = startIndex..<(startIndex + durationHours)
                 
-                // Ensure activity fits within available hours
+                // Ensure within bounds
                 guard startIndex + durationHours <= prices.count else { continue }
                 
-                var totalPrice = 0.0
+                // Skip if overlapping
+                if requiredSlots.contains(where: { occupiedHours.contains($0) }) {
+                    continue
+                }
                 
-                for i in startIndex..<(startIndex + durationHours) {
+                // Calculate total price once
+                var totalPrice = 0.0
+                for i in requiredSlots {
                     totalPrice += prices[i].price
                 }
                 
@@ -77,6 +62,7 @@ class DataController {
                 if score < bestScore {
                     bestScore = score
                     bestStartHour = prices[startIndex].hour
+                    bestSlots = Array(requiredSlots)
                 }
             }
             
@@ -88,7 +74,14 @@ class DataController {
             ) ?? baseDate
             
             let totalCost = impact.kWh * bestScore
-            let carbon = impact.kWh * (bestScore / impact.kWh) // adjust if needed
+            
+            // Optional: simple placeholder carbon model
+            let carbon = impact.kWh * 0.5
+            
+            // Mark hours as occupied
+            for slot in bestSlots {
+                occupiedHours.insert(slot)
+            }
             
             scheduled.append(
                 ScheduledActivity(
