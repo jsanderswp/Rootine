@@ -1,0 +1,13 @@
+//
+//  Config.xcconfig
+//  Rootine
+//
+//  Created by Jackson Sanders on 4/3/26.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
+
+GEMINI_API_KEY = AIzaSyBiqYwSAlFMnXaHmM5nNjRemGSG7hkYrd8
+ELECTRICITY_MAPS_API_KEY = GHGwJcVeNmRrFrGzvER5
+OPENEI_API_KEY = 2WSxwjMYJixO8C9xqZitjDqHVcEfOGHZFQHtEOLJ
