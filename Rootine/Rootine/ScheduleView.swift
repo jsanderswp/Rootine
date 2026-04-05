@@ -295,7 +295,8 @@ struct ScheduleView: View {
             }
             
             let oldTime = task.timestamp
-            task.timestamp = scheduled.scheduledDate
+            let cal = Calendar.current
+            task.timestamp = cal.dateInterval(of: .hour, for: scheduled.scheduledDate)!.start
             matchCount += 1
             
             print("✅ Matched '\(originalInput)' → '\(scheduled.impact.activity.activity)' at \(scheduled.scheduledDate)")
@@ -341,7 +342,7 @@ struct OptimalRow: View {
         formatter.dateFormat = "h:mm"
         return formatter.string(from: task.timestamp)
     }
-    
+
     private var amPmString: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "a"

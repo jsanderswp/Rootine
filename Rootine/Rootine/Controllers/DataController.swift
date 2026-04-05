@@ -50,7 +50,12 @@ class DataController {
     var currentTask: Task<Void, Never>?
 
     func processTasks(_ inputs: [String]) async -> [ScheduledActivity]{
-        let base = baseDate ?? Date()
+        let now = baseDate ?? Date()
+        let currentHourStart = Calendar.current.dateInterval(of: .hour, for: now)!.start
+        let minutes = Calendar.current.component(.minute, from: now)
+        let base = minutes >= 30
+            ? Calendar.current.date(byAdding: .hour, value: 1, to: currentHourStart)!
+            : currentHourStart
         var impacts: [ActivityImpact] = []
 
         for input in inputs {
@@ -90,7 +95,13 @@ class DataController {
     }
     
     func processTask(_ input: String) async -> ActivityImpact? {
-        let base = baseDate ?? Date()
+        let now = baseDate ?? Date()
+        let currentHourStart = Calendar.current.dateInterval(of: .hour, for: now)!.start
+        let minutes = Calendar.current.component(.minute, from: now)
+
+        let base = minutes >= 30
+            ? Calendar.current.date(byAdding: .hour, value: 1, to: currentHourStart)!
+            : currentHourStart
 
         print("🔍 DataController: Processing task: \(input)")
         let result = await geminiService.parseActivities(input)

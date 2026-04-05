@@ -7,3 +7,5 @@
 
 // Configuration settings file format documentation can be found at:
 // https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
+ELECTRICITY_MAPS_API_KEY = GHGwJcVeNmRrFrGzvER5
+GEMINI_API_KEY = AIzaSyDkorTW-YIwV9ftNmHS5tR645RhS1ViK5c

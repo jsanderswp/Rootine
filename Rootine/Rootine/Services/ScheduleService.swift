@@ -47,30 +47,26 @@ private struct HourSlot {
 
     /// Higher = better. Renewable % dominates, then carbon (inverted), then cost (inverted).
     func score(kWh: Double, rateRange: (min: Double, max: Double)?) -> Double {
-        let costPerKwh = rate?.totalRate ?? 0.40   // fallback if DB miss
+        let costPerKwh = rate?.totalRate ?? 0.40
         let cost       = kWh * costPerKwh
 
-        // Normalize each signal to ~0-1 range:
-        //   renewable: 0–100 % → 0–1   (higher = better, weight 0.50)
-        //   carbon:    0–500 g/kWh      (lower = better, weight 0.25)
-        //   cost:      actual rate range (lower = better, weight 0.25)
-        
         let renewableScore = (renewablePercentage / 100.0) * 0.50
         let carbonScore    = max(0, 1.0 - (carbonIntensity / 500.0)) * 0.25
-        
-        // Better cost normalization using actual LADWP rate range
+
         let costScore: Double
         if let range = rateRange, range.max > range.min {
-            // Normalize based on actual rate spread
-            // Base rates: ~$0.23 (base) to ~$0.31 (high peak)
             let normalizedCost = (costPerKwh - range.min) / (range.max - range.min)
             costScore = (1.0 - normalizedCost) * 0.25
         } else {
-            // Fallback normalization
             costScore = max(0, 1.0 - (cost / (kWh * 0.50))) * 0.25
         }
 
-        return renewableScore + carbonScore + costScore
+        let baseScore = renewableScore + carbonScore + costScore
+
+        // Amplify score for heavier tasks so they compete harder for the best slots
+        let kWhMultiplier = 1.0 + log(max(1.0, kWh * 10))
+
+        return baseScore * kWhMultiplier
     }
 
     func reason(kWh: Double, rateRange: (min: Double, max: Double)?) -> SchedulingReason {
@@ -90,7 +86,8 @@ private struct HourSlot {
 
 /// Schedules activities over the next 24 hours from `baseDate`.
 ///
-/// - Flexible activities are assigned the highest-scoring available hour slot.
+/// - Energy-heavy flexible activities are assigned the highest-scoring available hour slot.
+/// - Non-energy tasks are assigned the lowest-scoring remaining slots.
 /// - Non-flexible activities are pinned to their original time and scored informatively.
 /// - Each hour slot can hold multiple activities (no exclusion).
 ///
@@ -106,6 +103,14 @@ func scheduleActivities(
 
     // 1. Build 24 candidate hour slots
     var slots = buildHourSlots(from: baseDate, rateService: rateService)
+    var occupiedRanges: [(start: Date, end: Date)] = []
+
+    func isSlotAvailable(_ slot: HourSlot, duration: Double) -> Bool {
+        let slotEnd = slot.date.addingTimeInterval(duration * 60)
+        return !occupiedRanges.contains(where: { range in
+            slot.date < range.end && slotEnd > range.start
+        })
+    }
 
     // Get rate range for better cost normalization
     let rateRange = rateService.rateRange(for: baseDate)
@@ -116,25 +121,23 @@ func scheduleActivities(
 
     // 2. Fetch 24-hour carbon forecast from Electricity Maps API
     let forecast = await energyService.fetchCarbonForecast()
-    
+
     // Fallback to current data + solar curve if forecast unavailable
     let carbonData = await energyService.fetchCarbonData()
     let fallbackRenewable = carbonData?.renewablePercentage ?? 30.0
     let fallbackCarbon = carbonData?.carbonIntensity ?? 300.0
-    
+
     // Apply forecast data to each hour slot
     for i in slots.indices {
         let hour = slots[i].hour
         let rateInfo = slots[i].rate
         let rateDisplay = rateInfo != nil ? "$\(String(format: "%.4f", rateInfo!.totalRate))" : "N/A"
-        
+
         if let hourlyData = forecast?[hour] {
-            // Use real forecast data
             slots[i].renewablePercentage = hourlyData.renewablePercentage
             slots[i].carbonIntensity = hourlyData.carbonIntensity
             print("✅ Hour \(String(format: "%2d", hour)): \(String(format: "%5.1f", hourlyData.renewablePercentage))% renewable, \(String(format: "%3.0f", hourlyData.carbonIntensity)) g/kWh, \(rateDisplay)/kWh [\(rateInfo?.periodLabel ?? "?")]")
         } else {
-            // Fallback: use solar curve estimation
             let solarBonus: Double
             if hour < 6 || hour > 18 {
                 solarBonus = 0.0
@@ -143,30 +146,38 @@ func scheduleActivities(
                 let normalizedDistance = hoursFromNoon / 6.0
                 solarBonus = 25.0 * (1.0 - normalizedDistance * normalizedDistance)
             }
-            
+
             slots[i].renewablePercentage = min(100, fallbackRenewable + solarBonus)
             slots[i].carbonIntensity = max(0, fallbackCarbon - (solarBonus * 2))
             print("⚠️ Hour \(String(format: "%2d", hour)): \(String(format: "%5.1f", slots[i].renewablePercentage))% renewable (fallback), \(rateDisplay)/kWh [\(rateInfo?.periodLabel ?? "?")]")
         }
     }
-    
+
     print("🔍 Scheduling \(impacts.count) activities across best time slots...")
     print("📊 Weights: 50% renewable, 25% carbon, 25% cost")
 
-    // 3. Schedule each activity
+    // 3. Split into energy and non-energy tasks
+    let energyImpacts = impacts.filter { $0.kWh > 0.01 }.sorted { $0.kWh > $1.kWh }
+    let nonEnergyImpacts = impacts.filter { $0.kWh <= 0.01 }
+
     var scheduled: [ScheduledActivity] = []
 
-    for impact in impacts {
+    // 4. Schedule energy tasks first into best available slots
+    for impact in energyImpacts {
         let isFlexible = impact.activity.isFlexible ?? true
 
         if isFlexible {
-            // Pick the best scoring slot and remove it so no two activities share an hour
-            guard let bestIndex = slots.indices.max(by: {
+            guard let bestIndex = slots.indices.filter({
+                isSlotAvailable(slots[$0], duration: impact.activity.duration ?? 60)
+            }).max(by: {
                 slots[$0].score(kWh: impact.kWh, rateRange: normalizedRateRange) < slots[$1].score(kWh: impact.kWh, rateRange: normalizedRateRange)
             }) else { continue }
 
             let best = slots[bestIndex]
             slots.remove(at: bestIndex)
+
+            let duration = impact.activity.duration ?? 60
+            occupiedRanges.append((start: best.date, end: best.date.addingTimeInterval(duration * 60)))
 
             scheduled.append(ScheduledActivity(
                 impact: impact,
@@ -177,9 +188,10 @@ func scheduleActivities(
             ))
 
         } else {
-            // Pin to original time, score it informatively
             let originalHour = Calendar.current.component(.hour, from: baseDate)
-            let slot = slots.first(where: { $0.hour == originalHour }) ?? slots[0]
+            guard let slotIndex = slots.firstIndex(where: { $0.hour == originalHour }) else { continue }
+            let slot = slots[slotIndex]
+            slots.remove(at: slotIndex)
 
             scheduled.append(ScheduledActivity(
                 impact: impact,
@@ -197,6 +209,29 @@ func scheduleActivities(
         }
     }
 
+    // 5. Schedule non-energy tasks into worst remaining slots
+    for impact in nonEnergyImpacts {
+        guard let worstIndex = slots.indices.filter({
+            isSlotAvailable(slots[$0], duration: impact.activity.duration ?? 60)
+        }).min(by: {
+            slots[$0].score(kWh: 0.01, rateRange: normalizedRateRange) < slots[$1].score(kWh: 0.01, rateRange: normalizedRateRange)
+        }) else { continue }
+
+        let worst = slots[worstIndex]
+        slots.remove(at: worstIndex)
+
+        let duration = impact.activity.duration ?? 60
+        occupiedRanges.append((start: worst.date, end: worst.date.addingTimeInterval(duration * 60)))
+
+        scheduled.append(ScheduledActivity(
+            impact: impact,
+            scheduledHour: worst.hour,
+            scheduledDate: worst.date,
+            reason: worst.reason(kWh: impact.kWh, rateRange: normalizedRateRange),
+            wasRescheduled: true
+        ))
+    }
+
     return scheduled.sorted { $0.scheduledHour < $1.scheduledHour }
 }
 
@@ -210,6 +245,12 @@ private func buildHourSlots(from base: Date, rateService: LADWPRateService) -> [
         guard let slotDate = cal.date(byAdding: .hour, value: offset, to: startOfHour) else {
             return nil
         }
+
+        guard slotDate >= base else { return nil }
+
+        let endOfDay = cal.startOfDay(for: cal.date(byAdding: .day, value: 1, to: base)!)
+        guard slotDate < endOfDay else { return nil }
+
         let rate = rateService.rate(for: slotDate)
         let hour = cal.component(.hour, from: slotDate)
         return HourSlot(hour: hour, date: slotDate, rate: rate)
