@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		A72B14D02F8265D4003522EC /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = A72B14CF2F8265D4003522EC /* SQLite */; };
-		D6C4F25C2F80BDD300F0D5E3 /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D6C4F25B2F80BDD300F0D5E3 /* Config.xcconfig */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,7 +31,6 @@
 		D6C4F2252F80915900F0D5E3 /* Rootine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Rootine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6C4F2342F80915B00F0D5E3 /* RootineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RootineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6C4F23E2F80915B00F0D5E3 /* RootineUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RootineUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		D6C4F25B2F80BDD300F0D5E3 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -105,7 +103,6 @@
 		D6C4F21C2F80915800F0D5E3 = {
 			isa = PBXGroup;
 			children = (
-				D6C4F25B2F80BDD300F0D5E3 /* Config.xcconfig */,
 				D6C4F2272F80915900F0D5E3 /* Rootine */,
 				D6C4F2372F80915B00F0D5E3 /* RootineTests */,
 				D6C4F2412F80915B00F0D5E3 /* RootineUITests */,
@@ -247,7 +244,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D6C4F25C2F80BDD300F0D5E3 /* Config.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -307,7 +303,6 @@
 /* Begin XCBuildConfiguration section */
 		D6C4F2462F80915B00F0D5E3 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D6C4F25B2F80BDD300F0D5E3 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -372,7 +367,6 @@
 		};
 		D6C4F2472F80915B00F0D5E3 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D6C4F25B2F80BDD300F0D5E3 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
