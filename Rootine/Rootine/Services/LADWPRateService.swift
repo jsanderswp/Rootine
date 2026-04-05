@@ -162,7 +162,6 @@ class LADWPRateService {
             })
             
         } catch {
-            print("Query error: \(error)")
             return nil
         }
     }
@@ -192,7 +191,6 @@ class LADWPRateService {
                 )
             }
         } catch {
-            print("Query error: \(error)")
             return []
         }
     }

@@ -307,10 +307,8 @@ struct HomeView: View {
     }
     
     private func fetchCurrentRenewablePercentage() async {
-        print("🔍 HomeView: Fetching current renewable percentage from Electricity Maps")
         
         guard let percentage = await energyService.fetchRenewablePercentage() else {
-            print("⚠️ Failed to fetch current renewable percentage, keeping existing value")
             return
         }
         
@@ -335,7 +333,6 @@ struct HomeView: View {
             if let futurePercentage = forecast[compareHour] {
                 let futurePercent = Int(futurePercentage.rounded())
                 cleanIsRising = futurePercent > cleanPercent
-                print("🔮 Forecast in 15min (hour \(compareHour)): \(futurePercent)%, trend: \(cleanIsRising ? "rising ↑" : "falling ↓")")
             } else {
                 print("⚠️ No forecast data for hour \(compareHour), keeping cleanIsRising as-is")
             }
@@ -344,7 +341,6 @@ struct HomeView: View {
         // Determine if we're in the best window (>50% clean)
         isBestWindow = cleanPercent > CLEAN_THRESHOLD
         
-        print("✅ Updated cleanPercent: \(cleanPercent)%, \(cleanIsRising ? "rising ↑" : "falling ↓")")
     }
 }
 

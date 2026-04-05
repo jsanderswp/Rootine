@@ -119,24 +119,14 @@ struct TasksView: View {
     private func addTask() async {
         if taskName.isEmpty { return }
 
-        print("🔍 DEBUG: Adding task: \(taskName)")
         let impact = await dataController.processTask(taskName)
 
-        print("🔍 DEBUG: Impact returned: \(impact != nil ? "YES" : "NO")")
-        if let impact = impact {
-            print("🔍 DEBUG: Activity: \(impact.activity.activity)")
-            print("🔍 DEBUG: Type: \(impact.activity.type)")
-            print("🔍 DEBUG: Duration: \(impact.activity.duration ?? -1)")
-            print("🔍 DEBUG: kWh: \(impact.kWh)")
-        }
 
         let usage = impact?.kWh ?? 0.0
-        print("🔍 DEBUG: Final usage: \(usage)")
 
         withAnimation {
             let durationMinutes = impact?.activity.duration ?? 60.0
             let durationString = formatDuration(minutes: durationMinutes)
-            print("🔍 DEBUG: Duration string: \(durationString)")
 
             let newTask = UserTask(name: taskName, energyUsage: usage, taskLength: durationString, timestamp: Date())
             modelContext.insert(newTask)

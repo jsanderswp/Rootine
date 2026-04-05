@@ -177,15 +177,12 @@ struct ScheduleView: View {
     }
     
     private func fetchRenewablePercentages() async {
-        print("🔍 ScheduleView: Fetching renewable forecast from Electricity Maps")
         
         guard let forecast = await energyService.fetchRenewableEnergyForecast() else {
-            print("⚠️ Failed to fetch renewable forecast, using fallback values")
             return
         }
         
         guard !forecast.isEmpty else {
-            print("⚠️ Renewable forecast is empty, using fallback values")
             return
         }
         
@@ -200,19 +197,17 @@ struct ScheduleView: View {
             if let percentage = forecast[hour] {
                 let roundedPercent = Int(percentage.rounded())
                 newRenewPercents.append(roundedPercent)
-                print("✅ Hour \(hour): \(roundedPercent)% renewable")
             } else {
                 // Fallback to current value if hour not in forecast
                 let index = chartHours.firstIndex(of: hour) ?? 0
                 let fallback = renewPercents[index]
                 newRenewPercents.append(fallback)
-                print("⚠️ Hour \(hour): Using fallback \(fallback)%")
             }
         }
         
         // Update the state on the main actor
         renewPercents = newRenewPercents
-        print("🔍 ScheduleView: Updated renewable percentages: \(renewPercents)")
+
         
         // Calculate clean window (best renewable period)
         updateCleanWindow(from: forecast)
@@ -250,83 +245,37 @@ struct ScheduleView: View {
         cleanWindowClose = bestWindowEnd
         cleanPercent = Int(bestAverage.rounded())
         
-        print("🌞 Best clean window: \(bestWindowStart):00 - \(bestWindowEnd):00 (avg \(cleanPercent)% renewable)")
     }
     
     private func createSchedule() async {
-        print("🔍 ScheduleView: Starting createSchedule()")
-        print("🔍 ScheduleView: optimizedTasks count: \(optimizedTasks.count)")
         
-        // Store mapping of task names to tasks
         var taskMap: [String: UserTask] = [:]
         taskNames.removeAll()
-        
+
         for task in optimizedTasks {
             taskNames.append(task.name)
             taskMap[task.name] = task
-            print("🔍 ScheduleView: Task '\(task.name)' current time: \(task.timestamp)")
         }
-        
-        print("🔍 ScheduleView: Calling processTasks with \(taskNames.count) tasks")
+
+        // processTasks handles CO₂ savings internally using the correct unoptimized baseline
         let schedule = await dataController.processTasks(taskNames)
-        print("🔍 ScheduleView: Received \(schedule.count) scheduled activities")
-        
-        // Debug: Print all scheduled activities
-        for (index, scheduled) in schedule.enumerated() {
-            print("🔍 Schedule[\(index)]: '\(scheduled.impact.activity.activity)' at \(scheduled.scheduledDate)")
-            print("    Original input: '\(scheduled.impact.originalInput ?? "nil")'")
-        }
-        
-        // Note: schedule.count may be less than optimizedTasks.count if some tasks
-        // aren't energy-related (e.g., "Go for a walk")
-        if schedule.count < optimizedTasks.count {
-            print("ℹ️ Note: \(optimizedTasks.count - schedule.count) task(s) had no energy impact and won't be rescheduled")
-        }
-        
-        // Match tasks by originalInput
-        var matchCount = 0
-        var unmatchedTasks: [String] = []
         
         for scheduled in schedule {
             guard let originalInput = scheduled.impact.originalInput,
                   let task = taskMap[originalInput] else {
-                print("⚠️ No original input found for scheduled activity")
+                
                 continue
             }
-            
+
             let oldTime = task.timestamp
-            let cal = Calendar.current
-            task.timestamp = cal.dateInterval(of: .hour, for: scheduled.scheduledDate)!.start
-            matchCount += 1
-            
-            print("✅ Matched '\(originalInput)' → '\(scheduled.impact.activity.activity)' at \(scheduled.scheduledDate)")
-            print("   Old time: \(oldTime) → New time: \(task.timestamp)")
+            task.timestamp = Calendar.current.dateInterval(of: .hour, for: scheduled.scheduledDate)!.start
         }
-        
-        // Track which tasks weren't matched (e.g., non-energy activities)
-        for taskName in taskNames {
-            if !schedule.contains(where: { $0.impact.originalInput == taskName }) {
-                unmatchedTasks.append(taskName)
-                print("ℹ️ Task '\(taskName)' was not scheduled (no energy impact)")
-            }
-        }
-        
-        print("🔍 ScheduleView: Matched \(matchCount)/\(optimizedTasks.count) tasks")
-        if !unmatchedTasks.isEmpty {
-            print("   Unmatched tasks: \(unmatchedTasks.joined(separator: ", "))")
-        }
-        
-        // Save the context to persist changes
+
         do {
             try modelContext.save()
-            print("✅ Context saved successfully")
         } catch {
-            print("❌ Failed to save context: \(error)")
         }
-        
-        // Calculate CO₂ savings
-        await dataController.calculateCO2Savings(schedule: schedule, taskMap: taskMap)
-        
+
         hasScheduled = true
     }
 }

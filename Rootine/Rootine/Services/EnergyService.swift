@@ -152,11 +152,9 @@ class EnergyService {
                 }
                 .min(by: { $0.carbon < $1.carbon })
 
-            print("🌞 Derived solar peak from carbon forecast: \(String(describing: peakPoint?.date))")
             return peakPoint?.date
 
         } catch {
-            print("🌞 Error fetching solar peak: \(error)")
             return nil
         }
     }
@@ -177,9 +175,7 @@ class EnergyService {
             
             // Check HTTP response
             if let httpResponse = response as? HTTPURLResponse {
-                print("📡 API Response: \(httpResponse.statusCode)")
                 guard (200...299).contains(httpResponse.statusCode) else {
-                    print("❌ API returned error status: \(httpResponse.statusCode)")
                     return nil
                 }
             }
@@ -190,7 +186,6 @@ class EnergyService {
             }
             
             let decoded = try JSONDecoder().decode(CarbonForecastResponse.self, from: data)
-            print("🔍 Decoded forecast array has \(decoded.forecast.count) items")
             
             var hourlyData: [Int: (Double, Double)] = [:]
             let calendar = Calendar.current
@@ -199,7 +194,6 @@ class EnergyService {
             
             for (index, point) in decoded.forecast.enumerated() {
                 guard let date = formatter.date(from: point.datetime) else {
-                    print("⚠️ Failed to parse date: \(point.datetime)")
                     continue
                 }
                 let hour = calendar.component(.hour, from: date)
@@ -210,25 +204,12 @@ class EnergyService {
                     renewable
                 )
                 
-                // Debug: Print first few entries
-                if index < 5 {
-                    print("  [\(index)] Hour \(hour): \(renewable)% renewable, \(point.carbonIntensity) g/kWh")
-                }
             }
             
-            print("✅ Successfully fetched forecast for \(hourlyData.count) hours")
             return hourlyData
         } catch let error as NSError {
-            if error.code == NSURLErrorCancelled {
-                print("⚠️ Request was cancelled - this is normal if view disappeared")
-            } else if error.code == NSURLErrorTimedOut {
-                print("⏱️ Request timed out - check network connection")
-            } else {
-                print("❌ Error fetching carbon forecast:", error.localizedDescription)
-            }
             return nil
         } catch {
-            print("❌ Error decoding carbon forecast:", error)
             return nil
         }
     }
@@ -249,20 +230,13 @@ class EnergyService {
             
             // Check HTTP response
             if let httpResponse = response as? HTTPURLResponse {
-                print("📡 Power Breakdown API Response: \(httpResponse.statusCode)")
                 guard (200...299).contains(httpResponse.statusCode) else {
-                    print("❌ Power breakdown API returned error status: \(httpResponse.statusCode)")
                     return nil
                 }
             }
             
-            // Debug: Print raw response
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("📄 Power breakdown response: \(jsonString.prefix(500))...")
-            }
             
             let decoded = try JSONDecoder().decode(PowerBreakdownForecastResponse.self, from: data)
-            print("🔍 Power breakdown forecast has \(decoded.data.count) items")
             
             var hourlyData: [Int: (Double, ElectricityMix)] = [:]
             let calendar = Calendar.current
@@ -271,7 +245,6 @@ class EnergyService {
             
             for (index, point) in decoded.data.enumerated() {
                 guard let date = formatter.date(from: point.datetime) else {
-                    print("⚠️ Failed to parse date: \(point.datetime)")
                     continue
                 }
                 let hour = calendar.component(.hour, from: date)
@@ -279,19 +252,12 @@ class EnergyService {
                 let mix = point.powerProductionBreakdown
                 let renewablePct = calculateRenewablePercentage(from: mix)
                 
-                // Debug: Print first few entries
-                if index < 5 {
-                    print("  [\(index)] Hour \(hour): \(String(format: "%.1f", renewablePct))% renewable")
-                    print("       Solar: \(mix.solar), Wind: \(mix.wind), Hydro: \(mix.hydro)")
-                }
                 
                 hourlyData[hour] = (renewablePct, mix)
             }
             
-            print("✅ Fetched power breakdown forecast for \(hourlyData.count) hours")
             return hourlyData
         } catch {
-            print("❌ Error fetching power breakdown forecast:", error)
             return nil
         }
     }
@@ -310,23 +276,15 @@ class EnergyService {
                 
                 // Check HTTP response
                 if let httpResponse = response as? HTTPURLResponse {
-                    print("📡 Latest Renewable API Response: \(httpResponse.statusCode)")
                     guard (200...299).contains(httpResponse.statusCode) else {
-                        print("❌ API returned error status: \(httpResponse.statusCode)")
                         return nil
                     }
                 }
                 
-                // Debug: Print raw response
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print("📄 Latest renewable response: \(jsonString)")
-                }
                 
                 let decoded = try JSONDecoder().decode(RenewablePercentageResponse.self, from: data)
-                print("✅ Current renewable percentage: \(decoded.value)%")
                 return decoded.value
             } catch {
-                print("Error fetching latest renewable percentage:", error)
                 return nil
             }
         }
@@ -347,20 +305,14 @@ class EnergyService {
             
             // Check HTTP response
             if let httpResponse = response as? HTTPURLResponse {
-                print("📡 Renewable Energy Forecast API Response: \(httpResponse.statusCode)")
                 guard (200...299).contains(httpResponse.statusCode) else {
-                    print("❌ API returned error status: \(httpResponse.statusCode)")
                     return nil
                 }
             }
             
-            // Debug: Print raw response
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("📄 Raw renewable forecast: \(jsonString.prefix(500))...")
-            }
             
             let decoded = try JSONDecoder().decode(RenewableEnergyForecastResponse.self, from: data)
-            print("🔍 Renewable forecast has \(decoded.data.count) items")
+
             
             var hourlyData: [Int: Double] = [:]
             let calendar = Calendar.current
@@ -369,32 +321,18 @@ class EnergyService {
             
             for (index, point) in decoded.data.enumerated() {
                 guard let date = formatter.date(from: point.datetime) else {
-                    print("⚠️ Failed to parse date: \(point.datetime)")
                     continue
                 }
                 let hour = calendar.component(.hour, from: date)
                 
                 hourlyData[hour] = point.value
                 
-                // Debug: Print first few entries
-                if index < 5 {
-                    print("  [\(index)] Hour \(hour): \(String(format: "%.1f", point.value))% renewable")
-                }
             }
             
-            print("✅ Fetched renewable forecast for \(hourlyData.count) hours")
             return hourlyData
         } catch let error as NSError {
-            if error.code == NSURLErrorCancelled {
-                print("⚠️ Request was cancelled")
-            } else if error.code == NSURLErrorTimedOut {
-                print("⏱️ Request timed out")
-            } else {
-                print("❌ Error fetching renewable forecast:", error.localizedDescription)
-            }
             return nil
         } catch {
-            print("❌ Error decoding renewable forecast:", error)
             return nil
         }
     }
