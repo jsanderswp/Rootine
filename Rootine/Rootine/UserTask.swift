@@ -1,5 +1,5 @@
 //
-//  Item.swift
+//  UserTask.swift
 //  Rootine
 //
 //  Created by Jackson Sanders on 4/3/26.
@@ -8,22 +8,24 @@
 import Foundation
 import SwiftData
 
-let HEAVY_USAGE: Float = 1.0 //kWh
+let HEAVY_USAGE: Double = 1.0 //kWh
 let CLEAN_THRESHOLD: Int = 50
 
 @Model
 final class UserTask {
     var name: String
-    var energyUsage: Float
+    var energyUsage: Double
     var taskLength: String
     var timestamp: Date
+    var originalTimestamp: Date?  // Track original time before optimization
     var isHighImpact: Bool
     
-    init(name: String, energyUsage: Float, taskLength: String, timestamp: Date) {
+    init(name: String, energyUsage: Double, taskLength: String, timestamp: Date) {
         self.name = name
         self.energyUsage = energyUsage
         self.taskLength = taskLength
         self.timestamp = timestamp
+        self.originalTimestamp = timestamp  // Store original time
         isHighImpact = energyUsage >= HEAVY_USAGE
     }
 }

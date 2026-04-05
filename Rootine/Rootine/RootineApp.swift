@@ -10,6 +10,8 @@ import SwiftData
 
 @main
 struct RootineApp: App {
+    @State private var dataController = DataController()
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             UserTask.self,
@@ -27,6 +29,7 @@ struct RootineApp: App {
         WindowGroup {
             NavigationStack {
                 LandingView()
+                    .environment(dataController)
             }
         }
         .modelContainer(sharedModelContainer)
@@ -35,5 +38,6 @@ struct RootineApp: App {
 
 #Preview {
     LandingView()
+        .environment(DataController())
         .modelContainer(for: UserTask.self, inMemory: true)
 }

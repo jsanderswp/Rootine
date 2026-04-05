@@ -8,9 +8,18 @@
 import SwiftUI
 import SwiftData
 
+func formatDuration(minutes: Double) -> String {
+    let hours = minutes / 60.0
+    let formatted = hours.formatted(.number.precision(.fractionLength(1)))
+    let unit = hours == 1.0 ? "hr" : "hrs"
+    return "\(formatted) \(unit)"
+}
+
 struct TasksView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(DataController.self) private var dataController
     @Query private var tasks: [UserTask]
+    @Binding var selectedTab: Tab
     @State private var taskName: String = ""
     @State var heavyCount: Int = 0
     @State var otherCount: Int = 0
@@ -45,7 +54,7 @@ struct TasksView: View {
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color("DarkText"), lineWidth: 1))
                     .padding(.leading, 20)
                 
-                Button(action: addTask) {
+                Button(action: { Task { await addTask() } }) {
                     Image(systemName: "plus.square.fill")
                         .font(.system(size: 73, weight: .regular))
                         .foregroundStyle(Color("Secondary"))
@@ -88,7 +97,7 @@ struct TasksView: View {
                 }
                 .listStyle(.plain)
                 Button("Optimize my day ↗") {
-                    
+                    selectedTab = .schedule
                 }
                 .font(.system(size: 20, weight: .regular))
                 .foregroundStyle(Color("Primary"))
@@ -104,17 +113,37 @@ struct TasksView: View {
         .background(Color("Primary").ignoresSafeArea())
     }
     
-    private func addTask() {
+    private func addTask() async {
         if taskName.isEmpty { return }
+        
+        print("🔍 DEBUG: Adding task: \(taskName)")
+        let impact = await dataController.processTask(taskName)
+        
+        print("🔍 DEBUG: Impact returned: \(impact != nil ? "YES" : "NO")")
+        if let impact = impact {
+            print("🔍 DEBUG: Activity: \(impact.activity.activity)")
+            print("🔍 DEBUG: Type: \(impact.activity.type)")
+            print("🔍 DEBUG: Duration: \(impact.activity.duration ?? -1)")
+            print("🔍 DEBUG: kWh: \(impact.kWh)")
+        }
+        
+        let usage = impact?.kWh ?? 0.0
+        print("🔍 DEBUG: Final usage: \(usage)")
+        
         withAnimation {
-            let usage = Float.random(in: 0...10)
             if usage >= HEAVY_USAGE {
                 heavyCount += 1
             } else {
                 otherCount += 1
             }
-            let newTask = UserTask(name: taskName, energyUsage: Float(usage), taskLength: "1 hr", timestamp: Date())
+            // Properly unwrap the duration - default to 60 minutes if nil
+            let durationMinutes = impact?.activity.duration ?? 60.0
+            let durationString = formatDuration(minutes: durationMinutes)
+            print("🔍 DEBUG: Duration string: \(durationString)")
+            
+            let newTask = UserTask(name: taskName, energyUsage: usage, taskLength: durationString, timestamp: Date())
             modelContext.insert(newTask)
+            taskName = "" // Clear the text field after adding
         }
     }
     
@@ -192,5 +221,6 @@ struct TaskRow: View {
 
 #Preview {
     LandingView()
+        .environment(DataController())
         .modelContainer(for: UserTask.self, inMemory: true)
 }

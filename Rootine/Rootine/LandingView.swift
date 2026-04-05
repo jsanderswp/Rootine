@@ -41,7 +41,7 @@ struct LandingView: View {
                         
                     case .tasks:
                         NavigationStack(path: $tasksPath) {
-                            TasksView()
+                            TasksView(selectedTab: $selectedTab)
                                 .padding(.top, -15)
                                 .toolbar {
                                     ToolbarItem(placement: .principal) {
@@ -126,6 +126,6 @@ struct LandingView: View {
 
 #Preview {
     LandingView()
+        .environment(DataController())
         .modelContainer(for: UserTask.self, inMemory: true)
 }
-

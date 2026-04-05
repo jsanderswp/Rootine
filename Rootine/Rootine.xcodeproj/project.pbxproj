@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A72B14D02F8265D4003522EC /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = A72B14CF2F8265D4003522EC /* SQLite */; };
 		D6C4F25C2F80BDD300F0D5E3 /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D6C4F25B2F80BDD300F0D5E3 /* Config.xcconfig */; };
 /* End PBXBuildFile section */
 
@@ -34,14 +35,37 @@
 		D6C4F25B2F80BDD300F0D5E3 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A72B14D42F827652003522EC /* Exceptions for "Rootine" folder in "Rootine" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D6C4F2242F80915900F0D5E3 /* Rootine */;
+		};
+		A72B14D62F8276F3003522EC /* Exceptions for "RootineTests" folder in "RootineTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D6C4F2332F80915B00F0D5E3 /* RootineTests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D6C4F2272F80915900F0D5E3 /* Rootine */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A72B14D42F827652003522EC /* Exceptions for "Rootine" folder in "Rootine" target */,
+			);
 			path = Rootine;
 			sourceTree = "<group>";
 		};
 		D6C4F2372F80915B00F0D5E3 /* RootineTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A72B14D62F8276F3003522EC /* Exceptions for "RootineTests" folder in "RootineTests" target */,
+			);
 			path = RootineTests;
 			sourceTree = "<group>";
 		};
@@ -57,6 +81,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A72B14D02F8265D4003522EC /* SQLite in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +143,7 @@
 			);
 			name = Rootine;
 			packageProductDependencies = (
+				A72B14CF2F8265D4003522EC /* SQLite */,
 			);
 			productName = Rootine;
 			productReference = D6C4F2252F80915900F0D5E3 /* Rootine.app */;
@@ -201,6 +227,9 @@
 			);
 			mainGroup = D6C4F21C2F80915800F0D5E3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A72B14CE2F8265D4003522EC /* XCRemoteSwiftPackageReference "SQLite.swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D6C4F2262F80915900F0D5E3 /* Products */;
 			projectDirPath = "";
@@ -409,6 +438,7 @@
 				DEVELOPMENT_TEAM = 87P6H6SBTL;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Rootine/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -438,6 +468,7 @@
 				DEVELOPMENT_TEAM = 87P6H6SBTL;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Rootine/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -465,6 +496,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 87P6H6SBTL;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RootineTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.JacksonSanders.Rootine.RootineTests;
@@ -484,6 +516,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 87P6H6SBTL;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RootineTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.JacksonSanders.Rootine.RootineTests;
@@ -569,6 +602,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A72B14CE2F8265D4003522EC /* XCRemoteSwiftPackageReference "SQLite.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stephencelis/SQLite.swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.16.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A72B14CF2F8265D4003522EC /* SQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A72B14CE2F8265D4003522EC /* XCRemoteSwiftPackageReference "SQLite.swift" */;
+			productName = SQLite;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D6C4F21D2F80915800F0D5E3 /* Project object */;
 }
