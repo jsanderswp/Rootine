@@ -12,7 +12,7 @@ import SwiftData
 struct RootineApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Task.self,
+            UserTask.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -35,5 +35,5 @@ struct RootineApp: App {
 
 #Preview {
     LandingView()
-        .modelContainer(for: Task.self, inMemory: true)
+        .modelContainer(for: UserTask.self, inMemory: true)
 }

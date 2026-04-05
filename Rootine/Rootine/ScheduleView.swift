@@ -11,7 +11,7 @@ import Foundation
 
 struct ScheduleView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var optimizedTasks: [Task]
+    @Query private var optimizedTasks: [UserTask]
     @State private var taskName: String = ""
     @State var heavyCount: Int = 0
     @State var otherCount: Int = 0
@@ -137,7 +137,7 @@ struct ScheduleView: View {
 }
 
 struct OptimalRow: View {
-    let task: Task
+    let task: UserTask
     @State private var isChecked: Bool = false
     
     private var timeString: String {
@@ -242,5 +242,5 @@ struct RoundedTopRectangle: Shape {
 
 #Preview {
     LandingView()
-        .modelContainer(for: Task.self, inMemory: true)
+        .modelContainer(for: UserTask.self, inMemory: true)
 }

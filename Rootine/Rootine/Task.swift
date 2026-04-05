@@ -12,7 +12,7 @@ let HEAVY_USAGE: Float = 1.0 //kWh
 let CLEAN_THRESHOLD: Int = 50
 
 @Model
-final class Task {
+final class UserTask {
     var name: String
     var energyUsage: Float
     var taskLength: String
@@ -28,12 +28,12 @@ final class Task {
     }
 }
 
-extension Task: Comparable {
-    static func == (lhs: Task, rhs: Task) -> Bool {
+extension UserTask: Comparable {
+    static func == (lhs: UserTask, rhs: UserTask) -> Bool {
         lhs.energyUsage == rhs.energyUsage
     }
 
-    static func < (lhs: Task, rhs: Task) -> Bool {
+    static func < (lhs: UserTask, rhs: UserTask) -> Bool {
         lhs.energyUsage < rhs.energyUsage
     }
 }

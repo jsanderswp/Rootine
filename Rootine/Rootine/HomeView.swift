@@ -10,7 +10,7 @@ import SwiftData
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var optimizedTasks: [Task]
+    @Query private var optimizedTasks: [UserTask]
     @Binding var selectedTab: Tab
     @State var cleanPercent: Int = 74
     @State var timeToSolPeak: Int = 15
@@ -217,5 +217,5 @@ struct HomeView: View {
 #Preview {
     @Previewable @State var selectedTab: Tab = .home
     return LandingView()
-        .modelContainer(for: Task.self, inMemory: true)
+        .modelContainer(for: UserTask.self, inMemory: true)
 }

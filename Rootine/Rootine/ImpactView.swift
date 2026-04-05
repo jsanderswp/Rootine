@@ -233,5 +233,5 @@ struct ImpactView: View {
 
 #Preview {
     LandingView()
-        .modelContainer(for: Task.self, inMemory: true)
+        .modelContainer(for: UserTask.self, inMemory: true)
 }

@@ -10,7 +10,7 @@ import SwiftData
 
 struct TasksView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var tasks: [Task]
+    @Query private var tasks: [UserTask]
     @State private var taskName: String = ""
     @State var heavyCount: Int = 0
     @State var otherCount: Int = 0
@@ -113,7 +113,7 @@ struct TasksView: View {
             } else {
                 otherCount += 1
             }
-            let newTask = Task(name: taskName, energyUsage: Float(usage), taskLength: "1 hr", timestamp: Date())
+            let newTask = UserTask(name: taskName, energyUsage: Float(usage), taskLength: "1 hr", timestamp: Date())
             modelContext.insert(newTask)
         }
     }
@@ -133,7 +133,7 @@ struct TasksView: View {
 }
 
 struct TaskRow: View {
-    let task: Task
+    let task: UserTask
     @State private var isChecked: Bool = false
 
     var body: some View {
@@ -192,5 +192,5 @@ struct TaskRow: View {
 
 #Preview {
     LandingView()
-        .modelContainer(for: Task.self, inMemory: true)
+        .modelContainer(for: UserTask.self, inMemory: true)
 }
