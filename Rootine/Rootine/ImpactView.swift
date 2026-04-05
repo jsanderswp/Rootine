@@ -205,6 +205,26 @@ struct ImpactView: View {
                 }
                 .padding(.horizontal, 20)
                 
+                HStack {
+                    Text("STREAK")
+                        .foregroundStyle(Color("DarkText"))
+                    Spacer()
+                }
+                .padding(.leading, 20)
+                .padding(.top, 10)
+                
+                HStack {
+                    ForEach(Array(0..<min(7, dayChars.count)), id: \.self) { index in
+                        Image(systemName: weeklyCO2Saved[index] == -1.0 ? "square" : weeklyCO2Saved[index] == 0.0 ? "xmark.square" : "checkmark.square")
+                            .font(.system(size: 60, weight: .regular))
+                            .foregroundStyle(weeklyCO2Saved[index] == -1.0 ? Color("DarkText") : weeklyCO2Saved[index] == 0.0 ? Color("BurntOrange") : Color("Secondary"))
+                            .frame(width: 50, height: 50)
+                            .background(weeklyCO2Saved[index] == -1.0 ? Color("MenuBar") : weeklyCO2Saved[index] == 0.0 ? Color("DarkBurntOrange") : Color("DarkSecondary"))
+                            .cornerRadius(8)
+                    }
+                }
+                .padding(.horizontal, 20)
+                
                 Spacer()
             }
         }

@@ -18,7 +18,30 @@ class DataController {
     private let energyService = EnergyService()
     private let costService = CostService()
     
-    var currentTask: Task?
+    var currentTask: Task<Void, Never>?
+    func processInput(_ input: String) {
+        Task {
+            guard let text = text else { return }
+            let result = await geminiService.parseActivities(text)
+            
+            guard !Task.isCancelled else { return }
+            
+                switch result {
+                case .success(let activities):
+                    let activityEnergies = energyService.calculateEnergy(from: activities)
+                    let activityImpacts = await energyService.calculateImpact(from: activityEnergies)
+                    
+                    guard !Task.isCancelled else { return }
+                    self.activityImpacts = activityImpacts
+                    
+                    let prices = await costService.fetchHourlyPrices()
+
+                case .failure(let error):
+                    print("Gemini error:", error)
+                    self.activityImpacts = nil
+            }
+        }
+    }
     
     func scheduleActivities(
         impacts: [ActivityImpact],
